@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sense Malaria </title>
+
+
+<style>
+    .image-Pre {
+        width: 300px;
+        min-height:100px;
+        border:2px solid #dddddd;
+        margin-top: 15px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #cccccc;
+
+    }
+
+    .image-Pre-img{
+        display: none;
+        width: 100%;
+    }
+
+</style>
+</head>
+
+<body>
+
+<input type="file" name="imgFile" id="imgFile">
+<div class="image-Pre" id="imgPre">
+    <img src="" alt="Image Preview" class="image-Pre-img" id="output_image">
+
+    <span class="image-Pre-Txt">Image Preview Block</span>
+</div>
+   
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.0.0/tf.min.js"></script>
+<script>
+
+//Code for image selection
+const imgFile = document.getElementById("imgFile");
+    const previewContainer = document.getElementById("imgPre");
+    const previewImage = previewContainer.querySelector(".image-Pre-img");
+    const previewText = previewContainer.querySelector(".image-Pre-Txt");
+
+    imgFile.addEventListener("change", function(){
+        const file = this.files[0];
+
+        if(file){
+            const reader = new FileReader();
+
+            previewText.style.display = "none";
+            previewImage.style.display="Block";
+
+            reader.addEventListener("load", function(){
+                console.log(this);
+                previewImage.setAttribute("src", this.result);
+
+            });
+
+            reader.readAsDataURL(file);
+        }
+        else{
+            previewImage.style.display = null;
+            previewText.style.display = null;
+        }
+        run();
+    });
+    //Image selection code Ends here
+
+    async function run() {
+        const MODEL_URL = 'http://127.0.0.1:8887/model.json';
+        const model = await tf.loadLayersModel(MODEL_URL);
+        console.log(model.summary());
+        let image = document.getElementById('output_image');
+        console.log(image);
+        let tensorImg = tf.browser.fromPixels(image).resizeNearestNeighbor([120, 120]).toFloat().expandDims(); //Img preprocessing and rescaling
+        result = await model.predict(tensorImg).data();
+        console.log(result);
+        if (result > 0.88) {
+            console.log("It's infected");
+            alert("Infected!");
+        } else {
+            console.log("It's Uninfected");
+            alert("Uninfected");
+        }
+    }
+   
+</script>
+
+</html>
